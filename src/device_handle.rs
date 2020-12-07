@@ -6,6 +6,7 @@ use libusb::*;
 
 use config_descriptor::ConfigDescriptor;
 use context::Context;
+use device::{self, Device};
 use device_descriptor::DeviceDescriptor;
 use error::{self, Error};
 use fields::{request_type, Direction, Recipient, RequestType};
@@ -36,6 +37,11 @@ unsafe impl Send for DeviceHandle {}
 unsafe impl Sync for DeviceHandle {}
 
 impl DeviceHandle {
+    /// Returns the device
+    pub fn get_device(&self) -> Device {
+        unsafe { device::from_libusb(self.context.clone(), libusb_get_device(self.handle)) }
+    }
+
     /// Returns the active configuration number.
     pub fn active_configuration(&self) -> ::Result<u8> {
         let mut config = unsafe { MaybeUninit::uninit().assume_init() };
