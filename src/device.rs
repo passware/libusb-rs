@@ -13,15 +13,6 @@ pub struct Device {
     device: *mut libusb_device,
 }
 
-impl Drop for Device {
-    /// Releases the device reference.
-    fn drop(&mut self) {
-        unsafe {
-            libusb_unref_device(self.device);
-        }
-    }
-}
-
 unsafe impl Send for Device {}
 unsafe impl Sync for Device {}
 
@@ -89,8 +80,6 @@ impl Device {
 
 #[doc(hidden)]
 pub unsafe fn from_libusb(context: Context, device: *mut libusb_device) -> Device {
-    libusb_ref_device(device);
-
     Device {
         context,
         device: device,
