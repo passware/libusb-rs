@@ -39,7 +39,7 @@ impl Context {
     /// Sets the log level of a `libusb` context.
     pub fn set_log_level(&mut self, level: LogLevel) {
         unsafe {
-            libusb_set_debug(**self.context, level.as_c_int());
+            libusb_set_option(**self.context, LIBUSB_OPTION_LOG_LEVEL, level.as_c_int());
         }
     }
 
