@@ -27,7 +27,7 @@ impl Clone for Context {
 unsafe impl Sync for Context {}
 unsafe impl Send for Context {}
 
-type LogCallback = fn(LogLevel, String);
+type LogCallback = Box<dyn Fn(LogLevel, String)>;
 
 struct LogCallbackMap {
     map: std::collections::HashMap<*mut libusb_context, LogCallback>,
@@ -144,6 +144,7 @@ impl Context {
 }
 
 /// Library logging levels.
+#[derive(Debug)]
 pub enum LogLevel {
     /// No messages are printed by `libusb` (default).
     None,
