@@ -49,12 +49,14 @@ lazy_static::lazy_static! {
 }
 
 extern "C" fn static_log_callback(context: *mut libusb_context, level: c_int, text: *const c_char) {
-    if let Some(logger) = LOG_CALLBACK_MAP.lock().unwrap().map.get(&context) {
-        let c_str: &CStr = unsafe { CStr::from_ptr(text) };
-        let str_slice: &str = c_str.to_str().unwrap();
-        let str_buf: String = str_slice.to_owned();
+    if let Ok(locked_table) = LOG_CALLBACK_MAP.lock() {
+        if let Some(logger) = locked_table.map.get(&context) {
+            let c_str: &CStr = unsafe { CStr::from_ptr(text) };
+            let str_slice: &str = c_str.to_str().unwrap_or("");
+            let log_message = str_slice.to_owned();
 
-        logger(LogLevel::from_c_int(level), str_buf);
+            logger(LogLevel::from_c_int(level), log_message);
+        }
     }
 }
 
@@ -76,11 +78,9 @@ impl Context {
     }
 
     pub fn set_log_callback(&mut self, log_callback: LogCallback, mode: LogCallbackMode) {
-        LOG_CALLBACK_MAP
-            .lock()
-            .unwrap()
-            .map
-            .insert(**self.context, log_callback);
+        if let Ok(mut locked_table) = LOG_CALLBACK_MAP.lock() {
+            locked_table.map.insert(**self.context, log_callback);
+        }
 
         unsafe {
             libusb_set_log_cb(**self.context, static_log_callback, mode.as_c_int());
