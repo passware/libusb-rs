@@ -8,7 +8,7 @@ pub use error::{Error, Result};
 pub use libusb::constants;
 pub use version::{version, LibraryVersion};
 
-pub use context::{Context, LogLevel};
+pub use context::{Context, LogCallbackMode, LogLevel};
 pub use device::Device;
 pub use device_handle::DeviceHandle;
 pub use device_list::{DeviceList, Devices};
