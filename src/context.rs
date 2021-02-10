@@ -143,6 +143,14 @@ impl Context {
     }
 }
 
+impl Drop for Context {
+    fn drop(&mut self) {
+        if let Ok(mut locked_table) = LOG_CALLBACK_MAP.lock() {
+            locked_table.map.remove(&**self.context);
+        }
+    }
+}
+
 /// Library logging levels.
 #[derive(Debug)]
 pub enum LogLevel {
