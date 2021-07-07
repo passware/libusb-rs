@@ -147,7 +147,7 @@ extern "C" fn libusb_transfer_callback_function(transfer_handle: *mut libusb_tra
 
         if state.is_transfer_dropped {
             unsafe {
-                libusb_cancel_transfer(*state.handle);
+                libusb_cancel_transfer(state.handle);
             }
 
             true
