@@ -141,8 +141,8 @@ extern "C" fn libusb_transfer_callback_function(transfer_handle: *mut libusb_tra
         >((*transfer_handle).user_data))
     };
 
-    let state = transfer.state.clone();
     let destroy_unhandled_transfer = {
+        let state = transfer.state.clone();
         let mut state = state.lock().unwrap();
 
         if state.is_transfer_dropped {
