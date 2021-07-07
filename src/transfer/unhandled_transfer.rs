@@ -23,7 +23,7 @@ pub struct UnhandledTransfer {
 
 impl UnhandledTransfer {
     pub fn new<'a>(device_handle: &'a mut DeviceHandle, iso_packets: i32) -> Result<*mut Self> {
-        let handle = Self::allocate_trhansfer_handle(iso_packets)?;
+        let handle = Self::allocate_transfer_handle(iso_packets)?;
 
         unsafe {
             (*handle).dev_handle = device_handle.handle;
@@ -104,7 +104,7 @@ impl UnhandledTransfer {
         Ok(())
     }
 
-    fn allocate_trhansfer_handle(iso_packets: i32) -> Result<*mut libusb_transfer> {
+    fn allocate_transfer_handle(iso_packets: i32) -> Result<*mut libusb_transfer> {
         let transfer_handle = unsafe { libusb_alloc_transfer(iso_packets) };
         if transfer_handle == std::ptr::null_mut() {
             return Err(Error::NoMem);
@@ -148,9 +148,9 @@ extern "C" fn libusb_transfer_callback_function(transfer_handle: *mut libusb_tra
     } else {
         state.status = OperationStatus::Completed;
 
-        let staus = unsafe { (*state.handle).status };
+        let status = unsafe { (*state.handle).status };
         if let Some(ref mut callback) = state.callback {
-            let status = TransferStatus::from_libusb(staus);
+            let status = TransferStatus::from_libusb(status);
             let actual_length = unsafe { (*transfer_handle).actual_length };
             callback(
                 status,
