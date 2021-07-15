@@ -77,6 +77,11 @@ impl Context {
         }
     }
 
+    /// Sets the global log level.
+    pub fn set_global_log_level(level: LogLevel) {
+        std::env::set_var("LIBUSB_DEBUG", level.as_c_int().to_string());
+    }
+
     pub fn set_log_callback(&mut self, log_callback: LogCallback, mode: LogCallbackMode) {
         if let Ok(mut locked_table) = LOG_CALLBACK_MAP.lock() {
             locked_table.map.insert(**self.context, log_callback);
@@ -84,6 +89,16 @@ impl Context {
 
         unsafe {
             libusb_set_log_cb(**self.context, static_log_callback, mode.as_c_int());
+        }
+    }
+
+    pub fn set_global_log_callback(log_callback: LogCallback) {
+        if let Ok(mut locked_table) = LOG_CALLBACK_MAP.lock() {
+            locked_table.map.insert(std::ptr::null_mut(), log_callback);
+        }
+
+        unsafe {
+            libusb_set_log_cb(std::ptr::null_mut(), static_log_callback, LogCallbackMode::Global.as_c_int());
         }
     }
 
