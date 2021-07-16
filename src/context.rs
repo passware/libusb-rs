@@ -46,6 +46,7 @@ impl LogCallbackMap {
 
 lazy_static::lazy_static! {
     static ref LOG_CALLBACK_MAP: Mutex<LogCallbackMap> = Mutex::new(LogCallbackMap::new());
+    static ref DEFAULT_CONTEXT_INITIALIZED_FLAG: Mutex<bool> = Mutex::new(false);
 }
 
 extern "C" fn static_log_callback(context: *mut libusb_context, level: c_int, text: *const c_char) {
@@ -70,6 +71,25 @@ impl Context {
         })
     }
 
+    pub fn init_default_context() -> ::Result<()> {
+        if let Ok(mut flag) = DEFAULT_CONTEXT_INITIALIZED_FLAG.lock() {
+            if !*flag {
+                try_unsafe!(libusb_init(std::ptr::null_mut()));
+                *flag = true;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn release_default_context() {
+        if let Ok(mut flag) = DEFAULT_CONTEXT_INITIALIZED_FLAG.lock() {
+            if *flag {
+                unsafe { libusb_exit(std::ptr::null_mut()) };
+                *flag = false;
+            }
+        }
+    }
+
     /// Sets the log level of a `libusb` context.
     pub fn set_log_level(&mut self, level: LogLevel) {
         unsafe {
@@ -77,28 +97,29 @@ impl Context {
         }
     }
 
-    /// Sets the global log level.
-    pub fn set_global_log_level(level: LogLevel) {
-        std::env::set_var("LIBUSB_DEBUG", level.as_c_int().to_string());
+    /// Sets the log level for the default context.
+    pub fn set_default_context_log_level(level: LogLevel) {
+        unsafe {
+            libusb_set_option(
+                std::ptr::null_mut(),
+                LIBUSB_OPTION_LOG_LEVEL,
+                level.as_c_int(),
+            );
+        }
     }
 
     pub fn set_log_callback(&mut self, log_callback: LogCallback, mode: LogCallbackMode) {
         if let Ok(mut locked_table) = LOG_CALLBACK_MAP.lock() {
-            locked_table.map.insert(**self.context, log_callback);
+            match mode {
+                LogCallbackMode::Global => {
+                    locked_table.map.insert(std::ptr::null_mut(), log_callback)
+                }
+                LogCallbackMode::Context => locked_table.map.insert(**self.context, log_callback),
+            };
         }
 
         unsafe {
             libusb_set_log_cb(**self.context, static_log_callback, mode.as_c_int());
-        }
-    }
-
-    pub fn set_global_log_callback(log_callback: LogCallback) {
-        if let Ok(mut locked_table) = LOG_CALLBACK_MAP.lock() {
-            locked_table.map.insert(std::ptr::null_mut(), log_callback);
-        }
-
-        unsafe {
-            libusb_set_log_cb(std::ptr::null_mut(), static_log_callback, LogCallbackMode::Global.as_c_int());
         }
     }
 
