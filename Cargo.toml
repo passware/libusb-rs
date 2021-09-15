@@ -11,7 +11,7 @@ readme = "README.md"
 keywords = ["usb", "libusb", "hardware", "bindings"]
 
 [dependencies]
-bit-set = "0.2.0"
+bit-set = "0.5.2"
 libusb-sys = { git = "https://github.com/passware/libusb-sys" }
 libc = "0.2"
 static_assertions = "1.1.0"
