@@ -439,10 +439,6 @@ impl DeviceHandle {
         buf: &[u8],
         timeout: Duration,
     ) -> ::Result<usize> {
-        if request_type & LIBUSB_ENDPOINT_DIR_MASK != LIBUSB_ENDPOINT_OUT {
-            return Err(Error::InvalidParam);
-        }
-
         let ptr = buf.as_ptr() as *mut c_uchar;
         let len = buf.len() as u16;
         let timeout_ms =
