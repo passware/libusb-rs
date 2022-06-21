@@ -65,6 +65,24 @@ impl Device {
         unsafe { libusb_get_device_address(self.device) }
     }
 
+    /// Returns the number of the port that a device is connected to.
+    pub fn port_number(&self) -> u8 {
+        unsafe { libusb_get_port_number(self.device) }
+    }
+
+    /// Returns the list of all port numbers from root for the specified device.
+    pub fn port_numbers(&self) -> ::Result<Vec<u8>> {
+        let mut ports = vec![0u8; 8];
+
+        let size = unsafe { libusb_get_port_numbers(self.device, ports.as_mut_ptr(), ports.len() as _) };
+        if size == LIBUSB_ERROR_OVERFLOW {
+            return Err(crate::error::from_libusb(LIBUSB_ERROR_OVERFLOW));
+        }
+
+        ports.resize(size as usize, 0);
+        Ok(ports)
+    }
+
     /// Returns the device's connection speed.
     pub fn speed(&self) -> Speed {
         fields::speed_from_libusb(unsafe { libusb_get_device_speed(self.device) })
