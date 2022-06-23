@@ -7,6 +7,13 @@ use device_descriptor::{self, DeviceDescriptor};
 use device_handle::{self, DeviceHandle};
 use fields::{self, Speed};
 
+/// A device location information.
+#[derive(Clone, PartialEq)]
+pub struct DeviceLocation {
+    bus: u8,
+    ports: Vec<u8>
+}
+
 /// A reference to a USB device.
 pub struct Device {
     context: Context,
@@ -81,6 +88,14 @@ impl Device {
 
         ports.resize(size as usize, 0);
         Ok(ports)
+    }
+
+    /// Returns a location for the specified device.
+    pub fn location(&self) -> ::Result<DeviceLocation> {
+        Ok(DeviceLocation {
+            bus: self.bus_number(),
+            ports: self.port_numbers()?
+        })
     }
 
     /// Returns the device's connection speed.
