@@ -597,6 +597,16 @@ impl DeviceHandle {
             Some(n) => self.read_string_descriptor(language, n, timeout),
         }
     }
+
+    pub fn clear_halt(&self, iface: u8) -> ::Result<()> {
+        let res = unsafe { libusb_clear_halt(self.handle, iface) };
+
+        if res < 0 {
+            Err(error::from_libusb(res))
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[doc(hidden)]
